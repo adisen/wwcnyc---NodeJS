@@ -5,6 +5,7 @@ const express = require("express");
 const app = express();
 const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
+const { check, validationResult } = require("express-validator");
 
 app.use(express.json());
 
@@ -25,24 +26,37 @@ let saveNotes = notes => {
 };
 
 // Add note route
-app.post("/notes/", async (req, res) => {
-  let notes = fetchNotes();
-  const { title, text } = req.body;
+app.post(
+  "/notes/",
+  [
+    check("title", "Title is required").notEmpty(),
+    check("text", "Text is required").notEmpty()
+  ],
+  (req, res) => {
+    // Check for errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.send(errors.array());
+    }
 
-  const newNote = {
-    title,
-    text,
-    id: uuidv4()
-  };
+    let notes = fetchNotes();
+    const { title, text } = req.body;
 
-  // Append note to notes
-  notes.push(newNote);
+    const newNote = {
+      title,
+      text,
+      id: uuidv4()
+    };
 
-  saveNotes(notes);
+    // Append note to notes
+    notes.push(newNote);
 
-  // Send back all notes
-  res.send(notes);
-});
+    saveNotes(notes);
+
+    // Send back all notes
+    res.send(notes);
+  }
+);
 
 // Get single note route
 app.get("/notes/:id", (req, res) => {

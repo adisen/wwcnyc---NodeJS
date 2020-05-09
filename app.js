@@ -4,6 +4,7 @@
 const express = require("express");
 const app = express();
 const fs = require("fs");
+const { v4: uuidv4 } = require("uuid");
 
 app.use(express.json());
 
@@ -23,11 +24,6 @@ let saveNotes = notes => {
   fs.writeFileSync("notes.json", JSON.stringify(notes));
 };
 
-// Root route
-app.get("/", (req, res) => {
-  res.send("Note app started");
-});
-
 // Add note route
 app.post("/notes/", async (req, res) => {
   let notes = fetchNotes();
@@ -35,7 +31,8 @@ app.post("/notes/", async (req, res) => {
 
   const newNote = {
     title,
-    text
+    text,
+    id: uuidv4()
   };
 
   // Append note to notes
@@ -48,11 +45,11 @@ app.post("/notes/", async (req, res) => {
 });
 
 // Get single note route
-app.get("/notes/:title", (req, res) => {
+app.get("/notes/:id", (req, res) => {
   let notes = fetchNotes();
-  const title = req.params.title;
+  const id = req.params.id;
 
-  let note = notes.filter(note => note.title === title);
+  let note = notes.filter(note => note.id === id);
   res.send(note);
 });
 
@@ -63,11 +60,11 @@ app.get("/notes", (req, res) => {
 });
 
 // Delete note route
-app.delete("/notes/:title", (req, res) => {
+app.delete("/notes/:id", (req, res) => {
   let notes = fetchNotes();
-  const title = req.params.title;
+  const id = req.params.id;
 
-  notes = notes.filter(note => note.title !== title);
+  notes = notes.filter(note => note.id !== id);
 
   saveNotes(notes);
 
@@ -78,4 +75,3 @@ const PORT = 4000;
 app.listen(PORT, () => {
   console.log(`App listening at port: ${PORT}`);
 });
-// Listen
